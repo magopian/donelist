@@ -4,20 +4,21 @@ import Date
 import Html
 import Html.Attributes
 import Html.Events
+import Kinto
 
 
 ---- MODEL ----
 
 
 type alias Item =
-    { when : Date.Date
-    , url : String
+    { timestamp : Date.Date
+    , url : Maybe String
     , comment : Maybe String
     }
 
 
 type alias User =
-    { token : String
+    { client : Kinto.Client
     , items : List Item
     }
 
@@ -54,7 +55,18 @@ update msg model =
             ( { model | password = password }, Cmd.none )
 
         Login ->
-            ( model, Cmd.none )
+            ( { model
+                | user =
+                    Just
+                        { client =
+                            Kinto.client
+                                "http://kinto.agopian.info/v1/"
+                                (Kinto.Basic model.username model.password)
+                        , items = []
+                        }
+              }
+            , Cmd.none
+            )
 
 
 
