@@ -3,6 +3,7 @@ module Main exposing (..)
 import Date
 import Html
 import Html.Attributes
+import Html.Events
 
 
 ---- MODEL ----
@@ -22,12 +23,15 @@ type alias User =
 
 
 type alias Model =
-    Maybe User
+    { user : Maybe User
+    , username : String
+    , password : String
+    }
 
 
 init : ( Model, Cmd Msg )
 init =
-    ( Nothing, Cmd.none )
+    ( { user = Nothing, username = "", password = "" }, Cmd.none )
 
 
 
@@ -35,12 +39,22 @@ init =
 
 
 type Msg
-    = NoOp
+    = UsernameUpdate String
+    | PasswordUpdate String
+    | Login
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
-    ( model, Cmd.none )
+    case msg of
+        UsernameUpdate username ->
+            ( { model | username = username }, Cmd.none )
+
+        PasswordUpdate password ->
+            ( { model | password = password }, Cmd.none )
+
+        Login ->
+            ( model, Cmd.none )
 
 
 
@@ -51,16 +65,33 @@ view : Model -> Html.Html Msg
 view model =
     Html.div []
         [ Html.h1 [] [ Html.text "The DONE List" ]
-        , viewAskUser
+        , viewAskUser model.username model.password
         ]
 
 
-viewAskUser : Html.Html Msg
-viewAskUser =
-    Html.form []
-        [ Html.input [ Html.Attributes.placeholder "username" ] []
-        , Html.input [ Html.Attributes.placeholder "password" ] []
-        , Html.input [ Html.Attributes.type_ "submit", Html.Attributes.value "Display my DONE List" ] []
+viewAskUser : String -> String -> Html.Html Msg
+viewAskUser username password =
+    Html.form
+        [ Html.Events.onSubmit Login
+        ]
+        [ Html.input
+            [ Html.Attributes.placeholder "username"
+            , Html.Attributes.value username
+            , Html.Events.onInput UsernameUpdate
+            ]
+            []
+        , Html.input
+            [ Html.Attributes.placeholder "password"
+            , Html.Attributes.type_ "password"
+            , Html.Attributes.value password
+            , Html.Events.onInput PasswordUpdate
+            ]
+            []
+        , Html.input
+            [ Html.Attributes.type_ "submit"
+            , Html.Attributes.value "Display my DONE List"
+            ]
+            []
         ]
 
 
