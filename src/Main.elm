@@ -1,33 +1,14 @@
 module Main exposing (..)
 
-import Date
+import Decoders
 import Html
 import Html.Attributes
 import Html.Events
 import Kinto
+import Types exposing (Item, Model, Msg(..), User)
 
 
 ---- MODEL ----
-
-
-type alias Item =
-    { timestamp : Date.Date
-    , url : Maybe String
-    , comment : Maybe String
-    }
-
-
-type alias User =
-    { client : Kinto.Client
-    , items : List Item
-    }
-
-
-type alias Model =
-    { user : Maybe User
-    , username : String
-    , password : String
-    }
 
 
 init : ( Model, Cmd Msg )
@@ -37,12 +18,6 @@ init =
 
 
 ---- UPDATE ----
-
-
-type Msg
-    = UsernameUpdate String
-    | PasswordUpdate String
-    | Login
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
@@ -55,18 +30,39 @@ update msg model =
             ( { model | password = password }, Cmd.none )
 
         Login ->
-            ( { model
-                | user =
-                    Just
-                        { client =
-                            Kinto.client
-                                "http://kinto.agopian.info/v1/"
-                                (Kinto.Basic model.username model.password)
-                        , items = []
-                        }
-              }
-            , Cmd.none
-            )
+            let
+                user =
+                    { username = model.username
+                    , client =
+                        Kinto.client
+                            "https://kinto.agopian.info/v1/"
+                            (Kinto.Basic model.username model.password)
+                    , items = []
+                    }
+            in
+                ( { model | user = Just user }, getItemList user )
+
+        ItemListUpdate (Ok itemPager) ->
+            let
+                updatedUser =
+                    model.user
+                        |> Maybe.map (\user -> { user | items = itemPager.objects })
+            in
+                ( { model | user = updatedUser }, Cmd.none )
+
+        ItemListUpdate (Err err) ->
+            let
+                _ =
+                    Debug.log "Error while getting the list of items" err
+            in
+                ( model, Cmd.none )
+
+
+getItemList : User -> Cmd Msg
+getItemList user =
+    user.client
+        |> Kinto.getList (Decoders.recordResource user.username)
+        |> Kinto.send ItemListUpdate
 
 
 
