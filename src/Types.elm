@@ -14,7 +14,7 @@ type alias Item =
 type DoneList
     = NotRetrieved
     | Retrieving
-    | Retrieved (List Item)
+    | Retrieved (Kinto.Pager Item)
     | ErrorWhileRetrieving Kinto.Error
 
 

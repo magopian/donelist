@@ -44,7 +44,7 @@ update msg model =
                 )
 
         ItemListUpdate (Ok itemPager) ->
-            ( { model | doneList = Retrieved itemPager.objects }, Cmd.none )
+            ( { model | doneList = Retrieved itemPager }, Cmd.none )
 
         ItemListUpdate (Err err) ->
             let
@@ -69,7 +69,26 @@ view : Model -> Html.Html Msg
 view model =
     Html.div []
         [ Html.h1 [] [ Html.text "The DONE List" ]
-        , viewAskUser model.username model.password
+        , case model.doneList of
+            NotRetrieved ->
+                viewAskUser model.username model.password
+
+            Retrieving ->
+                Html.text "Please wait while we're retrieving the Done List"
+
+            ErrorWhileRetrieving err ->
+                Html.div []
+                    [ viewAskUser model.username model.password
+                    , Html.br [] []
+                    , Html.div [] [ Html.text "Error while retrieving the Done List: " ]
+                    , Html.div [] [ Html.text <| toString err ]
+                    ]
+
+            Retrieved pager ->
+                Html.div []
+                    [ Html.text "Here's your Done List: "
+                    , Html.text <| toString pager.objects
+                    ]
         ]
 
 
