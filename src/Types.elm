@@ -11,10 +11,16 @@ type alias Item =
     }
 
 
+type DoneList
+    = NotRetrieved
+    | Retrieving
+    | Retrieved (List Item)
+    | ErrorWhileRetrieving Kinto.Error
+
+
 type alias User =
     { username : Username
     , client : Kinto.Client
-    , items : List Item
     }
 
 
@@ -28,6 +34,7 @@ type alias Password =
 
 type alias Model =
     { user : Maybe User
+    , doneList : DoneList
     , username : Username
     , password : Password
     }

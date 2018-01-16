@@ -5,7 +5,7 @@ import Html
 import Html.Attributes
 import Html.Events
 import Kinto
-import Types exposing (Item, Model, Msg(..), User)
+import Types exposing (DoneList(..), Model, Msg(..), User)
 
 
 ---- MODEL ----
@@ -13,7 +13,7 @@ import Types exposing (Item, Model, Msg(..), User)
 
 init : ( Model, Cmd Msg )
 init =
-    ( { user = Nothing, username = "", password = "" }, Cmd.none )
+    ( { user = Nothing, doneList = NotRetrieved, username = "", password = "" }, Cmd.none )
 
 
 
@@ -37,25 +37,21 @@ update msg model =
                         Kinto.client
                             "https://kinto.agopian.info/v1/"
                             (Kinto.Basic model.username model.password)
-                    , items = []
                     }
             in
-                ( { model | user = Just user }, getItemList user )
+                ( { model | user = Just user, doneList = Retrieving }
+                , getItemList user
+                )
 
         ItemListUpdate (Ok itemPager) ->
-            let
-                updatedUser =
-                    model.user
-                        |> Maybe.map (\user -> { user | items = itemPager.objects })
-            in
-                ( { model | user = updatedUser }, Cmd.none )
+            ( { model | doneList = Retrieved itemPager.objects }, Cmd.none )
 
         ItemListUpdate (Err err) ->
             let
                 _ =
                     Debug.log "Error while getting the list of items" err
             in
-                ( model, Cmd.none )
+                ( { model | doneList = ErrorWhileRetrieving err }, Cmd.none )
 
 
 getItemList : User -> Cmd Msg
