@@ -11,10 +11,14 @@ type alias Item =
     }
 
 
-type DoneList
+type alias DoneList =
+    Kinto.Pager Item
+
+
+type DoneListStatus
     = NotRetrieved
     | Retrieving
-    | Retrieved (Kinto.Pager Item)
+    | Retrieved DoneList
     | ErrorWhileRetrieving Kinto.Error
 
 
@@ -34,7 +38,7 @@ type alias Password =
 
 type alias Model =
     { user : Maybe User
-    , doneList : DoneList
+    , doneList : DoneListStatus
     , username : Username
     , password : Password
     }

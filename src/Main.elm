@@ -5,7 +5,18 @@ import Html
 import Html.Attributes
 import Html.Events
 import Kinto
-import Types exposing (DoneList(..), Model, Msg(..), User)
+import Types exposing (DoneList, DoneListStatus(..), Item, Model, Msg(..), Password, User, Username)
+
+
+kintoServer : String
+kintoServer =
+    "https://kinto.agopian.info/v1/"
+
+
+editLink : String -> String -> String
+editLink collection id =
+    kintoServer ++ "admin/#/buckets/donelist/collections/" ++ collection ++ "/records/" ++ id
+
 
 
 ---- MODEL ----
@@ -35,7 +46,7 @@ update msg model =
                     { username = model.username
                     , client =
                         Kinto.client
-                            "https://kinto.agopian.info/v1/"
+                            kintoServer
                             (Kinto.Basic model.username model.password)
                     }
             in
@@ -87,12 +98,12 @@ view model =
             Retrieved pager ->
                 Html.div []
                     [ Html.text "Here's your Done List: "
-                    , Html.text <| toString pager.objects
+                    , viewDoneList model.username pager
                     ]
         ]
 
 
-viewAskUser : String -> String -> Html.Html Msg
+viewAskUser : Username -> Password -> Html.Html Msg
 viewAskUser username password =
     Html.form
         [ Html.Events.onSubmit Login
@@ -116,6 +127,39 @@ viewAskUser username password =
             ]
             []
         ]
+
+
+viewItem : Username -> Item -> Html.Html Msg
+viewItem username item =
+    let
+        comment =
+            Maybe.withDefault item.id item.comment
+                |> Html.text
+
+        link =
+            item.url
+                |> Maybe.map (\url -> Html.a [ Html.Attributes.href url ] [ Html.text "[link]" ])
+                |> Maybe.withDefault (Html.text "")
+
+        edit =
+            Html.a
+                [ Html.Attributes.href <| editLink username item.id ]
+                [ Html.text "[edit]" ]
+    in
+        Html.li []
+            [ Html.text <| toString item.last_modified
+            , Html.text ": "
+            , comment
+            , link
+            , edit
+            ]
+
+
+viewDoneList : Username -> DoneList -> Html.Html Msg
+viewDoneList username doneList =
+    doneList.objects
+        |> List.map (viewItem username)
+        |> Html.ul []
 
 
 
